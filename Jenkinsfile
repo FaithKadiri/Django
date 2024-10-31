@@ -3,11 +3,11 @@ pipeline {
 
     environment {
         // Define environment variables
-        GIT_REPO_URL = 'https://github.com/yourusername/your-repo.git'
-        BRANCH_NAME = 'main'  // Change to your target branch
-        DOCKER_IMAGE_NAME = 'your-django-app'
-        AWS_INSTANCE_IP = 'your-ec2-instance-ip'
-        SSH_KEY_PATH = credentials('your-ssh-key-id') // Jenkins credentials ID for SSH key
+        GIT_REPO_URL = 'https://github.com/FaithKadiri/Django.git' // Your GitHub repo URL
+        BRANCH_NAME = 'main'  // Change to your target branch if needed
+        DOCKER_IMAGE_NAME = 'your-django-app' // Replace with your desired Docker image name
+        AWS_INSTANCE_IP = '18.118.9.15' // Your AWS instance's public IP
+        SSH_KEY_PATH = credentials('faith-aws-ssh-key') // Jenkins credentials ID for your SSH key
     }
 
     stages {
@@ -33,11 +33,11 @@ pipeline {
             steps {
                 script {
                     // Deploy the Docker container to AWS instance
-                    sshagent (credentials: ['your-ssh-key-id']) {
+                    sshagent (credentials: ['faith-aws-ssh-key']) {
                         sh """
-                        ssh -o StrictHostKeyChecking=no ec2-user@${AWS_INSTANCE_IP} << EOF
+                        ssh -i "${SSH_KEY_PATH}" -o StrictHostKeyChecking=no ubuntu@${AWS_INSTANCE_IP} << EOF
                         docker pull ${DOCKER_IMAGE_NAME}
-                        docker stop \$(docker ps -q --filter "ancestor=${DOCKER_IMAGE_NAME}")
+                        docker stop \$(docker ps -q --filter "ancestor=${DOCKER_IMAGE_NAME}") || true
                         docker run -d -p 80:8000 ${DOCKER_IMAGE_NAME}
                         EOF
                         """
