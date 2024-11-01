@@ -1,5 +1,5 @@
-# Use an official Python runtime as a parent image
-FROM python:3.9  or :latest 
+# Use the latest official Python runtime as a parent image
+FROM python:latest
 
 # Set the working directory
 WORKDIR /usr/src/app
@@ -21,5 +21,3 @@ ENV DJANGO_SETTINGS_MODULE=myproject.settings
 
 # Run manage.py to start the server
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-
-
