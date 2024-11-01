@@ -2,14 +2,11 @@ pipeline {
     agent any 
 
     environment {
-        // Define environment variables
-        GIT_REPO_URL = 'https://github.com/FaithKadiri/Django.git' // Your GitHub repo URL
-        BRANCH_NAME = 'main' // Change to your target branch if needed
-        DOCKER_IMAGE_NAME = 'faithkadiri/django:latest' // Docker image name
-        AWS_INSTANCE_IP = '18.118.9.15' // Your AWS instance's public IP
-        SSH_KEY_PATH = credentials('faith-aws-ssh-key') // Jenkins credentials ID for your SSH key
-        DOCKER_USERNAME = 'faithkadiri' // Your Docker Hub username
-        DOCKER_PASSWORD = credentials('dockerhub-credentials') // Jenkins credentials ID for Docker password
+        GIT_REPO_URL = 'https://github.com/Success-C-Opara/organicproject.git'
+        BRANCH_NAME = 'main'
+        DOCKER_IMAGE_NAME = 'organic-django-app'
+        AWS_INSTANCE_IP = '3.80.209.86'
+        SSH_KEY_PATH = '/var/lib/jenkins/success-aws-key.pem'
     }
 
     stages {
@@ -22,20 +19,13 @@ pipeline {
             }
         }
 
-        stage('Login to Docker Hub') {
-            steps {
-                script {
-                    // Login to Docker Hub
-                    echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-                }
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image
-                    docker.build(DOCKER_IMAGE_NAME)
+                    // Build the Docker image from the Dockerfile in the current directory
+                    dir('.') {  // Using the root directory of the project
+                        docker.build(DOCKER_IMAGE_NAME)
+                    }
                 }
             }
         }
@@ -43,16 +33,21 @@ pipeline {
         stage('Deploy to AWS') {
             steps {
                 script {
-                    // Deploy the Docker container to AWS instance
-                    sshagent (credentials: ['faith-aws-ssh-key']) {
-                        sh """
-                        ssh -o StrictHostKeyChecking=no ubuntu@${AWS_INSTANCE_IP} << EOF
-                        docker pull ${DOCKER_IMAGE_NAME}
-                        docker stop \$(docker ps -q --filter "ancestor=${DOCKER_IMAGE_NAME}") || true
-                        docker run -d -p 80:8000 ${DOCKER_IMAGE_NAME}
-                        EOF
-                        """
-                    }
+                    sh """
+                    ssh -i ${SSH_KEY_PATH} -o StrictHostKeyChecking=no ubuntu@${AWS_INSTANCE_IP} " \
+                    # Pull the latest Docker image \
+                    docker pull ${DOCKER_IMAGE_NAME} || true; \
+                    
+                    # Stop any running containers using the same image \
+                    CONTAINER_ID=\$(docker ps -q --filter 'ancestor=${DOCKER_IMAGE_NAME}'); \
+                    if [ -n '\$CONTAINER_ID' ]; then \
+                        docker stop \$CONTAINER_ID; \
+                        docker rm \$CONTAINER_ID; \
+                    fi; \
+                    
+                    # Run the new container \
+                    docker run -d -p 80:8000 ${DOCKER_IMAGE_NAME}"
+                    """
                 }
             }
         }
