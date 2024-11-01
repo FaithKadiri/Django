@@ -2,11 +2,11 @@ pipeline {
     agent any 
 
     environment {
-        GIT_REPO_URL = 'https://github.com/Success-C-Opara/organicproject.git'
+        GIT_REPO_URL = 'https://github.com/FaithKadiri/Django.git'
         BRANCH_NAME = 'main'
         DOCKER_IMAGE_NAME = 'organic-django-app'
-        AWS_INSTANCE_IP = '3.80.209.86'
-        SSH_KEY_PATH = '/var/lib/jenkins/success-aws-key.pem'
+        AWS_INSTANCE_IP = '18.223.196.253'
+        SSH_KEY_PATH = '/var/lib/jenkins/my-aws-ssh-key'
     }
 
     stages {
